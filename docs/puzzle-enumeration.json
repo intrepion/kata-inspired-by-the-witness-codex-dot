@@ -1,0 +1,633 @@
+{
+  "method": "All simple orthogonal start-to-goal paths; independent union-find cell connectivity and exact edge counts. No production validator imported.",
+  "puzzles": [
+    {
+      "id": 0,
+      "title": "First Light",
+      "size": 2,
+      "enumeratedPaths": 12,
+      "acceptedPaths": 12,
+      "unique": false,
+      "exampleSolution": [
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ]
+      ]
+    },
+    {
+      "id": 1,
+      "title": "A Small Detour",
+      "size": 2,
+      "enumeratedPaths": 12,
+      "acceptedPaths": 10,
+      "unique": false,
+      "exampleSolution": [
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ]
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Three Quiet Bells",
+      "size": 3,
+      "enumeratedPaths": 184,
+      "acceptedPaths": 48,
+      "unique": false,
+      "exampleSolution": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Separate Shores",
+      "size": 2,
+      "enumeratedPaths": 12,
+      "acceptedPaths": 5,
+      "unique": false,
+      "exampleSolution": [
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ]
+    },
+    {
+      "id": 4,
+      "title": "The Orchard Wall",
+      "size": 3,
+      "enumeratedPaths": 184,
+      "acceptedPaths": 54,
+      "unique": false,
+      "exampleSolution": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ]
+    },
+    {
+      "id": 5,
+      "title": "A Bend in the Hedge",
+      "size": 3,
+      "enumeratedPaths": 184,
+      "acceptedPaths": 12,
+      "unique": false,
+      "exampleSolution": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Old Roots",
+      "size": 3,
+      "enumeratedPaths": 184,
+      "acceptedPaths": 5,
+      "unique": false,
+      "exampleSolution": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          0
+        ]
+      ]
+    },
+    {
+      "id": 7,
+      "title": "One Reed",
+      "size": 2,
+      "enumeratedPaths": 12,
+      "acceptedPaths": 4,
+      "unique": false,
+      "exampleSolution": [
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ]
+      ]
+    },
+    {
+      "id": 8,
+      "title": "An Inward Turn",
+      "size": 3,
+      "enumeratedPaths": 184,
+      "acceptedPaths": 4,
+      "unique": false,
+      "exampleSolution": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Three Measures",
+      "size": 3,
+      "enumeratedPaths": 184,
+      "acceptedPaths": 8,
+      "unique": false,
+      "exampleSolution": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          0
+        ]
+      ]
+    },
+    {
+      "id": 10,
+      "title": "The Reflection Walk",
+      "size": 3,
+      "enumeratedPaths": 184,
+      "acceptedPaths": 124,
+      "unique": false,
+      "exampleSolution": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          0
+        ]
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Held Apart",
+      "size": 3,
+      "enumeratedPaths": 184,
+      "acceptedPaths": 4,
+      "unique": false,
+      "exampleSolution": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ]
+    },
+    {
+      "id": 12,
+      "title": "A Woven Memory",
+      "size": 3,
+      "enumeratedPaths": 184,
+      "acceptedPaths": 2,
+      "unique": false,
+      "exampleSolution": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          0
+        ]
+      ]
+    },
+    {
+      "id": 13,
+      "title": "The Last Light",
+      "size": 3,
+      "enumeratedPaths": 184,
+      "acceptedPaths": 1,
+      "unique": true,
+      "exampleSolution": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ]
+    }
+  ]
+}
