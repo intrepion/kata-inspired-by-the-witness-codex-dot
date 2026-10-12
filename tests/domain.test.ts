@@ -1,15 +1,124 @@
-import {test} from 'node:test';
-import assert from 'node:assert/strict';
-import {validate} from '../src/domain';
-import type {Puzzle,Point} from '../src/puzzles';
-const p:Puzzle={id:0,title:'Test',region:0,size:2,start:[0,2],end:[2,0],waypoints:[],symbols:[],triangles:[],hints:['a','b','c'],note:'',solution:[]};
-const route:Point[]=[[0,2],[1,2],[1,1],[1,0],[2,0]];
-test('a legal orthogonal spring-to-lantern trace restores a panel',()=>assert.equal(validate(p,route),null));
-test('partial, wrong start, jumps and repeated vertices cannot restore',()=>{for(const path of [[],[[0,2]],[[1,2],[1,1],[1,0],[2,0]],[[0,2],[2,2],[2,0]],[[0,2],[1,2],[0,2],[0,1],[0,0],[1,0],[2,0]],[[0,2],[1.5,2],[2,0]],[[0,2],[-1,2],[2,0]]] as Point[][])assert.notEqual(validate(p,path),null);});
-test('every seed must be visited',()=>{assert.equal(validate({...p,waypoints:[[1,1]]},route),null);assert.notEqual(validate({...p,waypoints:[[0,0]]},route),null);});
-test('trace walls split leaf and stone cell regions',()=>{const symbols:Puzzle['symbols']=[{cell:[0,0],kind:'leaf'},{cell:[1,0],kind:'stone'}];assert.equal(validate({...p,symbols},route),null);assert.notEqual(validate({...p,symbols},[[0,2],[0,1],[0,0],[1,0],[2,0]]),null);});
-test('notches count border and interior edges exactly',()=>{assert.equal(validate({...p,triangles:[{cell:[1,0],count:2}]},route),null);assert.notEqual(validate({...p,triangles:[{cell:[1,0],count:1}]},route),null);});
-import {extend,nextHint} from '../src/domain';import {puzzles} from '../src/puzzles';import {independentlyEnumerate,independentlyAccepts} from '../scripts/verify-puzzles';
-test('every exhaustive independent solution agrees with production acceptance',()=>{for(const panel of puzzles)for(const candidate of independentlyEnumerate(panel))assert.equal(validate(panel,candidate)===null,independentlyAccepts(panel,candidate),`panel ${panel.id}, ${JSON.stringify(candidate)}`);});
-test('interaction starts only at spring, rejects jumps, undoes immediate backtrack and stops at goal',()=>{assert.deepEqual(extend(p,[],[1,1]),[]);assert.deepEqual(extend(p,[],p.start),[p.start]);assert.deepEqual(extend(p,route,[2,1]),route);assert.deepEqual(extend(p,route.slice(0,3),[1,2]),route.slice(0,2));assert.deepEqual(extend(p,route.slice(0,3),[0,2]),route.slice(0,3));assert.deepEqual(extend(p,[p.start],[2,2]),[p.start]);});
-test('hints graduate and saturate without skipping',()=>{assert.deepEqual(nextHint(p,0),{level:1,text:'a'});assert.deepEqual(nextHint(p,1),{level:2,text:'b'});assert.deepEqual(nextHint(p,2),{level:3,text:'c'});assert.deepEqual(nextHint(p,99),{level:3,text:'c'});});
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { validate } from "../src/domain";
+import type { Puzzle, Point } from "../src/puzzles";
+const p: Puzzle = {
+  id: 0,
+  title: "Test",
+  region: 0,
+  size: 2,
+  start: [0, 2],
+  end: [2, 0],
+  waypoints: [],
+  symbols: [],
+  triangles: [],
+  hints: ["a", "b", "c"],
+  note: "",
+  solution: [],
+};
+const route: Point[] = [
+  [0, 2],
+  [1, 2],
+  [1, 1],
+  [1, 0],
+  [2, 0],
+];
+test("a legal orthogonal spring-to-lantern trace restores a panel", () =>
+  assert.equal(validate(p, route), null));
+test("partial, wrong start, jumps and repeated vertices cannot restore", () => {
+  for (const path of [
+    [],
+    [[0, 2]],
+    [
+      [1, 2],
+      [1, 1],
+      [1, 0],
+      [2, 0],
+    ],
+    [
+      [0, 2],
+      [2, 2],
+      [2, 0],
+    ],
+    [
+      [0, 2],
+      [1, 2],
+      [0, 2],
+      [0, 1],
+      [0, 0],
+      [1, 0],
+      [2, 0],
+    ],
+    [
+      [0, 2],
+      [1.5, 2],
+      [2, 0],
+    ],
+    [
+      [0, 2],
+      [-1, 2],
+      [2, 0],
+    ],
+  ] as Point[][])
+    assert.notEqual(validate(p, path), null);
+});
+test("every seed must be visited", () => {
+  assert.equal(validate({ ...p, waypoints: [[1, 1]] }, route), null);
+  assert.notEqual(validate({ ...p, waypoints: [[0, 0]] }, route), null);
+});
+test("trace walls split leaf and stone cell regions", () => {
+  const symbols: Puzzle["symbols"] = [
+    { cell: [0, 0], kind: "leaf" },
+    { cell: [1, 0], kind: "stone" },
+  ];
+  assert.equal(validate({ ...p, symbols }, route), null);
+  assert.notEqual(
+    validate({ ...p, symbols }, [
+      [0, 2],
+      [0, 1],
+      [0, 0],
+      [1, 0],
+      [2, 0],
+    ]),
+    null,
+  );
+});
+test("notches count border and interior edges exactly", () => {
+  assert.equal(
+    validate({ ...p, triangles: [{ cell: [1, 0], count: 2 }] }, route),
+    null,
+  );
+  assert.notEqual(
+    validate({ ...p, triangles: [{ cell: [1, 0], count: 1 }] }, route),
+    null,
+  );
+});
+import { extend, nextHint } from "../src/domain";
+import { puzzles } from "../src/puzzles";
+import {
+  independentlyEnumerate,
+  independentlyAccepts,
+} from "../scripts/verify-puzzles";
+test("every exhaustive independent solution agrees with production acceptance", () => {
+  for (const panel of puzzles)
+    for (const candidate of independentlyEnumerate(panel))
+      assert.equal(
+        validate(panel, candidate) === null,
+        independentlyAccepts(panel, candidate),
+        `panel ${panel.id}, ${JSON.stringify(candidate)}`,
+      );
+});
+test("interaction starts only at spring, rejects jumps, undoes immediate backtrack and stops at goal", () => {
+  assert.deepEqual(extend(p, [], [1, 1]), []);
+  assert.deepEqual(extend(p, [], p.start), [p.start]);
+  assert.deepEqual(extend(p, route, [2, 1]), route);
+  assert.deepEqual(extend(p, route.slice(0, 3), [1, 2]), route.slice(0, 2));
+  assert.deepEqual(extend(p, route.slice(0, 3), [0, 2]), route.slice(0, 3));
+  assert.deepEqual(extend(p, [p.start], [2, 2]), [p.start]);
+});
+test("hints graduate and saturate without skipping", () => {
+  assert.deepEqual(nextHint(p, 0), { level: 1, text: "a" });
+  assert.deepEqual(nextHint(p, 1), { level: 2, text: "b" });
+  assert.deepEqual(nextHint(p, 2), { level: 3, text: "c" });
+  assert.deepEqual(nextHint(p, 99), { level: 3, text: "c" });
+});

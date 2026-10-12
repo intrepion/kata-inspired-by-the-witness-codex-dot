@@ -1,5 +1,50 @@
-import {test} from 'node:test';import assert from 'node:assert/strict';import {restore,unlocked} from '../src/state';
-test('malformed save recovers to a clean playable garden',()=>assert.deepEqual(restore('{bad').solved,{}));
-import {puzzles} from '../src/puzzles';import {fresh} from '../src/state';
-test('unlocks require every prerequisite region and restore rejects forged or out-of-order solutions',()=>{const save=fresh();assert.equal(unlocked(0,save),true);assert.equal(unlocked(1,save),false);for(const p of puzzles.filter(p=>p.region===0))save.solved[p.id]=p.solution;assert.equal(unlocked(1,save),true);assert.equal(unlocked(2,save),false);assert.deepEqual(restore(JSON.stringify({version:1,solved:{13:puzzles[13].solution},hints:{}})).solved,{});assert.deepEqual(restore(JSON.stringify({version:1,solved:{0:[[0,0],[2,0]]}})).solved,{});});
-test('save survives valid full journey and clamps corrupt hints',()=>{const save=fresh();for(const p of puzzles)save.solved[p.id]=p.solution;save.hints[0]=100;const loaded=restore(JSON.stringify(save));assert.equal(Object.keys(loaded.solved).length,14);assert.equal(loaded.hints[0],3);assert.deepEqual(restore('null'),fresh());assert.deepEqual(restore(JSON.stringify({version:2})),fresh());});
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { restore, unlocked } from "../src/state";
+test("malformed save recovers to a clean playable garden", () =>
+  assert.deepEqual(restore("{bad").solved, {}));
+import { puzzles } from "../src/puzzles";
+import { fresh } from "../src/state";
+test("unlocks require every prerequisite region and restore rejects forged or out-of-order solutions", () => {
+  const save = fresh();
+  assert.equal(unlocked(0, save), true);
+  assert.equal(unlocked(1, save), false);
+  for (const p of puzzles.filter((p) => p.region === 0))
+    save.solved[p.id] = p.solution;
+  assert.equal(unlocked(1, save), true);
+  assert.equal(unlocked(2, save), false);
+  assert.deepEqual(
+    restore(
+      JSON.stringify({
+        version: 1,
+        solved: { 13: puzzles[13].solution },
+        hints: {},
+      }),
+    ).solved,
+    {},
+  );
+  assert.deepEqual(
+    restore(
+      JSON.stringify({
+        version: 1,
+        solved: {
+          0: [
+            [0, 0],
+            [2, 0],
+          ],
+        },
+      }),
+    ).solved,
+    {},
+  );
+});
+test("save survives valid full journey and clamps corrupt hints", () => {
+  const save = fresh();
+  for (const p of puzzles) save.solved[p.id] = p.solution;
+  save.hints[0] = 100;
+  const loaded = restore(JSON.stringify(save));
+  assert.equal(Object.keys(loaded.solved).length, 14);
+  assert.equal(loaded.hints[0], 3);
+  assert.deepEqual(restore("null"), fresh());
+  assert.deepEqual(restore(JSON.stringify({ version: 2 })), fresh());
+});
