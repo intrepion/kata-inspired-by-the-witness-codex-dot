@@ -8,3 +8,13 @@
 **Notch**: A triangle asking for exactly its displayed number of surrounding cell edges to be traced.
 **Memory**: A story fragment revealed by restoring a panel.
 **Restoration**: A successful submission that remains recorded on revisits.
+
+**Channel**: A garden connection carrying light from a restored tablet to a gate.
+
+**Channel walk**: The short first-person route from the landing through the orchard and terraces to the lantern garden.
+
+**Atlas journey**: The original illustrated island journey, with its own restoration history.
+
+**Pause**: A suspended garden visit that keeps the current exploration or tablet interaction ready to resume.
+
+**Leaving a tablet**: Ending its current trace and returning to active garden exploration; restored channels remain restored.
