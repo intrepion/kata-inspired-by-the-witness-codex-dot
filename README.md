@@ -34,3 +34,7 @@ Touch the round spring, then drag or click neighboring points. Click the previou
 `npm test`, `npm run verify:puzzles`, `npm run typecheck`, `npm run build`, `npm audit --audit-level=moderate`. Independent enumeration covers all 1,888 simple corner-to-corner candidates and compares every candidate to production validation. Only the last panel is unique. See [QA](docs/QA.md), [specification](docs/specification.md), [glossary](GLOSSARY.md) and [reviews](docs/reviews.md).
 
 The original atlas includes four illustrated locations, fourteen puzzles, three rule families and a separate reflection observation map with an accessible text equivalent. The channel walk adds first-person exploration and physical progression while retaining the atlas for existing players. There is no account or cloud sync.
+
+## Play online
+
+[Play the hosted game](https://intrepion.github.io/kata-inspired-by-the-witness-codex-dot/)
