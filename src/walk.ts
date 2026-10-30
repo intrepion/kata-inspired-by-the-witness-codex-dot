@@ -18,6 +18,7 @@ import {
   type Camera,
 } from "./walk-domain";
 import { GardenRenderer } from "./walk-render";
+import type { createGardenThree } from "./walk-three";
 
 const root = document.querySelector<HTMLDivElement>("#app")!;
 root.innerHTML = `<main class="walk-app">
@@ -33,6 +34,16 @@ const el = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
 const canvas = el<HTMLCanvasElement>("garden"),
   renderer = new GardenRenderer(canvas);
+let threeView: ReturnType<typeof createGardenThree> | null = null;
+if (new URLSearchParams(location.search).get("view") === "three") {
+  void import("./walk-three").then(({ createGardenThree }) => {
+    const viewCanvas = document.createElement("canvas"); viewCanvas.id = "garden-three";
+    viewCanvas.setAttribute("aria-hidden", "true");
+    viewCanvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%;pointer-events:none";
+    canvas.before(viewCanvas); threeView = createGardenThree(viewCanvas); canvas.style.position = "relative";
+  }).catch((error: unknown) => { console.warn("3D view unavailable; using original view.", error); document.getElementById("garden-three")?.remove(); });
+}
+
 let storageFailed = false;
 let raw: string | null = null;
 try {
@@ -516,14 +527,9 @@ function frame(now: number) {
     gate.forEach(
       (v, i) => (gate[i] = Math.min(1, v + (save.solved[i] ? dt * 0.65 : 0))),
     );
-  renderer.render(camera, {
-    save,
-    active: session.active,
-    path: session.path,
-    error: session.error,
-    gate,
-    time: now / 1000,
-  });
+  const viewState = { save, active: session.active, path: session.path, error: session.error, gate, time: now / 1000 };
+  const visiblePanels = threeView ? threeView.render(camera, viewState, canvas.clientWidth, canvas.clientHeight) : null;
+  renderer.render(camera, viewState, visiblePanels);
   target =
     session.mode === "walk"
       ? renderer.panelAt(canvas.clientWidth / 2, canvas.clientHeight / 2)

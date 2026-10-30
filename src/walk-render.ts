@@ -13,6 +13,30 @@ export type ViewState = {
   time: number;
 };
 
+/** Pick the nearest visible panel when projected quads overlap on screen. */
+export function nearestPanelHit(
+  candidates: { id: number; corners: Screen[] }[],
+  x: number,
+  y: number,
+): number | null {
+  let nearest: number | null = null,
+    nearestDepth = Infinity;
+  for (const { id, corners } of candidates) {
+    if (!corners.every((c) => c.depth > 0.08)) continue;
+    const sides = corners.map((a, i) => {
+      const b = corners[(i + 1) % corners.length];
+      return (b.x - a.x) * (y - a.y) - (b.y - a.y) * (x - a.x);
+    });
+    if (!sides.every((v) => v >= 0) && !sides.every((v) => v <= 0)) continue;
+    const depth = corners.reduce((sum, c) => sum + c.depth, 0) / corners.length;
+    if (depth < nearestDepth) {
+      nearest = id;
+      nearestDepth = depth;
+    }
+  }
+  return nearest;
+}
+
 /** A small perspective renderer. All panels, paths and scenery share the same world camera. */
 export class GardenRenderer {
   private ctx: CanvasRenderingContext2D;
@@ -21,6 +45,7 @@ export class GardenRenderer {
   private focal = 1;
   private camera: Camera = { x: 0, y: 1.65, z: 8, yaw: 0, pitch: 0 };
   private commands: Command[] = [];
+  private visiblePanels: Set<number> | null = null;
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext("2d")!;
   }
@@ -54,29 +79,23 @@ export class GardenRenderer {
     ]);
   }
   panelAt(x: number, y: number): number | null {
-    for (const p of panels) {
-      if (
-        this.camera.z < p.z + 0.35 ||
-        Math.hypot(this.camera.x - p.x, this.camera.z - p.z) > 4.6
+    const candidates = panels
+      .filter(
+        (p) =>
+          (!this.visiblePanels || this.visiblePanels.has(p.puzzle.id)) &&
+          this.camera.z >= p.z + 0.35 &&
+          Math.hypot(this.camera.x - p.x, this.camera.z - p.z) <= 4.6,
       )
-        continue;
-      const corners = [
-        this.project([p.x - 1.05, 2.925, p.z + 0.2]),
-        this.project([p.x + 1.05, 2.925, p.z + 0.2]),
-        this.project([p.x + 1.05, 0.375, p.z + 0.2]),
-        this.project([p.x - 1.05, 0.375, p.z + 0.2]),
-      ];
-      const sides = corners.map((a, i) => {
-        const b = corners[(i + 1) % corners.length];
-        return (b.x - a.x) * (y - a.y) - (b.y - a.y) * (x - a.x);
-      });
-      if (
-        corners.every((c) => c.depth > 0.08) &&
-        (sides.every((v) => v >= 0) || sides.every((v) => v <= 0))
-      )
-        return p.puzzle.id;
-    }
-    return null;
+      .map((p) => ({
+        id: p.puzzle.id,
+        corners: [
+          this.project([p.x - 1.05, 2.925, p.z + 0.2]),
+          this.project([p.x + 1.05, 2.925, p.z + 0.2]),
+          this.project([p.x + 1.05, 0.375, p.z + 0.2]),
+          this.project([p.x - 1.05, 0.375, p.z + 0.2]),
+        ],
+      }));
+    return nearestPanelHit(candidates, x, y);
   }
   nearestVertex(id: number, x: number, y: number): Point | null {
     let best: Point | null = null,
@@ -114,7 +133,7 @@ export class GardenRenderer {
       }
     }
     if (clipped.length < 3) return;
-    const depth = input.reduce((s, v) => s + v[2], 0) / input.length;
+    const depth = clipped.reduce((s, v) => s + v[2], 0) / clipped.length;
     this.commands.push({
       depth,
       paint: () => {
@@ -242,7 +261,7 @@ export class GardenRenderer {
       },
     });
   }
-  render(camera: Camera, state: ViewState) {
+  render(camera: Camera, state: ViewState, visiblePanels: Set<number> | null = null) {
     const rect = this.canvas.getBoundingClientRect(),
       ratio = Math.min(devicePixelRatio || 1, 1.5);
     this.width = rect.width;
@@ -259,6 +278,13 @@ export class GardenRenderer {
     c.setTransform(ratio, 0, 0, ratio, 0, 0);
     this.camera = camera;
     this.commands = [];
+    this.visiblePanels = visiblePanels;
+    if (visiblePanels) {
+      c.clearRect(0, 0, this.width, this.height);
+      for (const p of panels) if (visiblePanels.has(p.puzzle.id)) this.drawPanel(p.puzzle.id, state);
+      this.commands.sort((a, b) => b.depth - a.depth).forEach((cmd) => cmd.paint());
+      return;
+    }
     const sky = c.createLinearGradient(0, 0, 0, this.height);
     sky.addColorStop(0, "#7eaeaf");
     sky.addColorStop(0.58, "#deead7");
