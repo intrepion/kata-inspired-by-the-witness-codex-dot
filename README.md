@@ -40,3 +40,7 @@ The original atlas includes four illustrated locations, fourteen puzzles, three 
 [Play the hosted game](https://intrepion.github.io/kata-inspired-by-the-witness-codex-dot/)
 
 An experimental `?view=three` garden uses a Three.js scene behind the existing interactive tablets. Its camera is mathematically aligned with the original panel projection; the original view remains the default pending visual and input playtesting. Three.js 0.180.0 is bundled with its MIT license. The experimental scenery does not yet include every original landmark and channel cue.
+
+## Arcade metadata
+
+See [docs/arcade-metadata.md](docs/arcade-metadata.md) for the game-owned manifest and screenshot provenance.
