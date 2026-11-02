@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": "kata-inspired-by-the-witness-codex-dot",
   "playUrl": "https://intrepion.github.io/kata-inspired-by-the-witness-codex-dot/",
   "screenshots": [
@@ -23,6 +23,56 @@
         "sourcePath": "docs/qa/walk-three-bells.jpg",
         "deployedBuild": null,
         "captureDate": null
+      }
+    },
+    {
+      "path": "arcade/screenshots/ci-20261102-01.jpg",
+      "sha256": "1de6b053b91e00e9ca4e60b2eb7fb32beae81fb1406cd401f51b00a29059c626",
+      "alt": "Stillwater gameplay, view 1",
+      "provenance": {
+        "kind": "ci_gameplay_capture",
+        "sourcePath": "arcade/capture-evidence/ci-20261102-01.png",
+        "sourceSha256": "813aa183f3c0cef83e877fbe759772f54b596906aaa90b52d82655654a258d7d",
+        "captureCommit": "cfd900cab3da07933710fa773ca1a7317f4745fc",
+        "workflowRunId": "41432983594",
+        "inputHashes": {
+          "index.html": "bc45bb9db64a38a8a4cc6b82614e9686a4d485c125166426980ecfeae3aadc73",
+          "assets/domain-HYrLR7vK.js": "eb779c317645be6f35b2d435086d1e1c23f6e7c9b64376cb27861c4dbd32a6b5",
+          "assets/index-hLspuiBT.js": "13c8efbde25d05b37ffc0cf673dacdcf217f502d16086e3dc63d7db7de6d9e56",
+          "assets/main-C-EGPdM6.js": "4ae6961bca727b82791cc7dd35bac0b94dedec25dc870a9a35494048282c3a21",
+          "assets/main-C3kAVKaa.css": "767137c888fe77da2d56634a9dfe6788b9d7ab85f334ddb67385e0ac9e07ace2",
+          "assets/walk-BbgNqjCC.js": "b8f5dfb6091fc4ff2c2d6a8469d0681f2b2415e8ab98d4dae7ab08d955ea91fd",
+          "assets/walk-DwRYJcpg.css": "d0d62bac374e3be05b6f20d24d59f680a5480258b33d86da4474250795782293",
+          "assets/walk-three-CCVcZhie.js": "1d7c94c25577bceeacadc1caf74238a7d1d803271a3e786177b823b098c3a3a4"
+        },
+        "publishedFilesVerifiedAt": "2026-11-02T19:01:20Z",
+        "captureRecordPath": "arcade/capture-evidence/ci-20261102-record.json",
+        "captureRecordSha256": "6bc7dc158b0ed419cf451f0b082b6f58e6163d8024c316c4da265f0a0885f238"
+      }
+    },
+    {
+      "path": "arcade/screenshots/ci-20261102-02.jpg",
+      "sha256": "0f1da2ab82765ec850ab1fe653f8647ff380bcf3142553c63cbd7901c889ed4f",
+      "alt": "Stillwater gameplay, view 2",
+      "provenance": {
+        "kind": "ci_gameplay_capture",
+        "sourcePath": "arcade/capture-evidence/ci-20261102-02.png",
+        "sourceSha256": "852225361161578b97514db2b0c74603fc55949745b1bb91d9cd483bf4367336",
+        "captureCommit": "cfd900cab3da07933710fa773ca1a7317f4745fc",
+        "workflowRunId": "41432983594",
+        "inputHashes": {
+          "index.html": "bc45bb9db64a38a8a4cc6b82614e9686a4d485c125166426980ecfeae3aadc73",
+          "assets/domain-HYrLR7vK.js": "eb779c317645be6f35b2d435086d1e1c23f6e7c9b64376cb27861c4dbd32a6b5",
+          "assets/index-hLspuiBT.js": "13c8efbde25d05b37ffc0cf673dacdcf217f502d16086e3dc63d7db7de6d9e56",
+          "assets/main-C-EGPdM6.js": "4ae6961bca727b82791cc7dd35bac0b94dedec25dc870a9a35494048282c3a21",
+          "assets/main-C3kAVKaa.css": "767137c888fe77da2d56634a9dfe6788b9d7ab85f334ddb67385e0ac9e07ace2",
+          "assets/walk-BbgNqjCC.js": "b8f5dfb6091fc4ff2c2d6a8469d0681f2b2415e8ab98d4dae7ab08d955ea91fd",
+          "assets/walk-DwRYJcpg.css": "d0d62bac374e3be05b6f20d24d59f680a5480258b33d86da4474250795782293",
+          "assets/walk-three-CCVcZhie.js": "1d7c94c25577bceeacadc1caf74238a7d1d803271a3e786177b823b098c3a3a4"
+        },
+        "publishedFilesVerifiedAt": "2026-11-02T19:01:20Z",
+        "captureRecordPath": "arcade/capture-evidence/ci-20261102-record.json",
+        "captureRecordSha256": "6bc7dc158b0ed419cf451f0b082b6f58e6163d8024c316c4da265f0a0885f238"
       }
     }
   ]
