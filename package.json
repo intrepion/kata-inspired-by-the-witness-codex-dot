@@ -12,6 +12,7 @@
     "preview": "vite preview --host 127.0.0.1 --port 5207 --strictPort"
   },
   "devDependencies": {
+    "@napi-rs/canvas": "^1.1.0",
     "@types/node": "^24.0.0",
     "prettier": "^3.9.10",
     "tsx": "^4.20.0",
