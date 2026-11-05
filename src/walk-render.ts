@@ -1,9 +1,10 @@
 import { panels, trees, type Camera, type WalkSave } from "./walk-domain";
 import { same } from "./domain";
+import { paintBackToFront, type PaintPolygon } from "./paint-depth";
 import type { Point } from "./puzzles";
 type Vec = [number, number, number];
 type Screen = { x: number; y: number; depth: number };
-type Command = { depth: number; paint: () => void };
+type Command = PaintPolygon;
 export type ViewState = {
   save: WalkSave;
   active: number | null;
@@ -115,8 +116,20 @@ export class GardenRenderer {
       }
     return best;
   }
-  private face(vertices: Vec[], color: string) {
+  private face(vertices: Vec[], color: string, oneSided = true) {
     const input = vertices.map((v) => this.cameraPoint(v));
+    // Faces are authored with outward winding. Hidden backs must not paint
+    // over their own visible fronts as their average depths swap during turns.
+    const [a, b, c] = input;
+    const u = b.map((v, i) => v - a[i]),
+      v = c.map((n, i) => n - a[i]);
+    const normal = [
+      u[1] * v[2] - u[2] * v[1],
+      u[2] * v[0] - u[0] * v[2],
+      u[0] * v[1] - u[1] * v[0],
+    ];
+    if (oneSided && normal[0] * a[0] + normal[1] * a[1] + normal[2] * a[2] <= 0)
+      return;
     const clipped: Vec[] = [];
     for (let i = 0; i < input.length; i++) {
       const a = input[i],
@@ -133,13 +146,12 @@ export class GardenRenderer {
       }
     }
     if (clipped.length < 3) return;
-    const depth = clipped.reduce((s, v) => s + v[2], 0) / clipped.length;
     this.commands.push({
-      depth,
-      paint: () => {
+      vertices: clipped,
+      paint: (fragment) => {
         const ctx = this.ctx;
         ctx.beginPath();
-        clipped.forEach(([x, y, z], i) =>
+        fragment.forEach(([x, y, z], i) =>
           ctx[i ? "lineTo" : "moveTo"](
             this.width / 2 + (x * this.focal) / z,
             this.height / 2 - (y * this.focal) / z,
@@ -213,25 +225,75 @@ export class GardenRenderer {
     );
   }
   private line(a: Vec, b: Vec, color: string, width: number) {
-    const pa = this.project(a),
-      pb = this.project(b);
-    if (pa.depth < 0.08 || pb.depth < 0.08) return;
+    const ca = this.cameraPoint(a),
+      cb = this.cameraPoint(b),
+      near = 0.08;
+    if (ca[2] < near && cb[2] < near) return;
+    if (ca[2] < near || cb[2] < near) {
+      const behind = ca[2] < near ? ca : cb,
+        ahead = ca[2] < near ? cb : ca;
+      const t = (near - behind[2]) / (ahead[2] - behind[2]);
+      behind[0] += (ahead[0] - behind[0]) * t;
+      behind[1] += (ahead[1] - behind[1]) * t;
+      behind[2] = near;
+    }
+    const screen = ([x, y, depth]: Vec): Screen => ({
+      x: this.width / 2 + (x * this.focal) / depth,
+      y: this.height / 2 - (y * this.focal) / depth,
+      depth,
+    });
+    const pa = screen(ca),
+      pb = screen(cb);
+    const strokeWidth = Math.max(
+      1,
+      (width * this.focal) / ((pa.depth + pb.depth) / 2),
+    );
+    const length = Math.hypot(pb.x - pa.x, pb.y - pa.y) || 1;
+    const dx = (((pb.x - pa.x) / length) * strokeWidth) / 2;
+    const dy = (((pb.y - pa.y) / length) * strokeWidth) / 2;
+    const bounds = [
+      this.unproject(pa.x - dx - dy, pa.y - dy + dx, pa.depth),
+      this.unproject(pb.x + dx - dy, pb.y + dy + dx, pb.depth),
+      this.unproject(pb.x + dx + dy, pb.y + dy - dx, pb.depth),
+      this.unproject(pa.x - dx + dy, pa.y - dy - dx, pa.depth),
+    ];
     this.commands.push({
-      depth: (pa.depth + pb.depth) / 2 - 0.002,
-      paint: () => {
-        const c = this.ctx;
-        c.beginPath();
-        c.moveTo(pa.x, pa.y);
-        c.lineTo(pb.x, pb.y);
-        c.strokeStyle = color;
-        c.lineWidth = Math.max(
-          1,
-          (width * this.focal) / ((pa.depth + pb.depth) / 2),
-        );
-        c.lineCap = "round";
-        c.stroke();
+      vertices: bounds,
+      paint: (fragment) => {
+        this.clipPaint(fragment, () => {
+          const c = this.ctx;
+          c.beginPath();
+          c.moveTo(pa.x, pa.y);
+          c.lineTo(pb.x, pb.y);
+          c.strokeStyle = color;
+          c.lineWidth = strokeWidth;
+          c.lineCap = "round";
+          c.stroke();
+        });
       },
     });
+  }
+  private unproject(x: number, y: number, depth: number): Vec {
+    return [
+      ((x - this.width / 2) * depth) / this.focal,
+      ((this.height / 2 - y) * depth) / this.focal,
+      depth,
+    ];
+  }
+  private clipPaint(vertices: Vec[], paint: () => void) {
+    const c = this.ctx;
+    c.save();
+    c.beginPath();
+    vertices.forEach(([x, y, z], i) =>
+      c[i ? "lineTo" : "moveTo"](
+        this.width / 2 + (x * this.focal) / z,
+        this.height / 2 - (y * this.focal) / z,
+      ),
+    );
+    c.closePath();
+    c.clip();
+    paint();
+    c.restore();
   }
   private disk(x: number, y: number, z: number, r: number, color: string) {
     this.face(
@@ -250,18 +312,49 @@ export class GardenRenderer {
   private text(at: Vec, value: string, size: number, color: string) {
     const p = this.project(at);
     if (p.depth < 0.2) return;
+    const fontSize = Math.max(5, (size * this.focal) / p.depth);
+    const font = `500 ${fontSize}px system-ui`;
+    this.ctx.font = font;
+    const halfWidth = this.ctx.measureText(value).width / 2 + 1;
+    // Keep the existing screen-space lettering, but place its visibility
+    // bounds on the label's world plane. A billboard-depth rectangle cuts
+    // through its own tablet when the viewer approaches from the side.
+    const onPlane = (x: number, y: number): Vec => {
+      const ray = this.unproject(x, y, 1),
+        camera = this.camera;
+      const worldZ =
+        ray[0] * Math.sin(camera.yaw) +
+        ray[1] * Math.cos(camera.yaw) * Math.sin(camera.pitch) -
+        Math.cos(camera.yaw) * Math.cos(camera.pitch);
+      return this.unproject(x, y, (at[2] - camera.z) / worldZ);
+    };
+    const bounds = [
+      onPlane(p.x - halfWidth, p.y - fontSize),
+      onPlane(p.x + halfWidth, p.y - fontSize),
+      onPlane(p.x + halfWidth, p.y + fontSize * 0.3),
+      onPlane(p.x - halfWidth, p.y + fontSize * 0.3),
+    ];
+    if (
+      bounds.some((point) => point[2] < 0.08 || !point.every(Number.isFinite))
+    )
+      return;
     this.commands.push({
-      depth: p.depth - 0.004,
-      paint: () => {
-        const c = this.ctx;
-        c.fillStyle = color;
-        c.font = `500 ${Math.max(5, (size * this.focal) / p.depth)}px system-ui`;
-        c.textAlign = "center";
-        c.fillText(value, p.x, p.y);
-      },
+      vertices: bounds,
+      paint: (fragment) =>
+        this.clipPaint(fragment, () => {
+          const c = this.ctx;
+          c.fillStyle = color;
+          c.font = font;
+          c.textAlign = "center";
+          c.fillText(value, p.x, p.y);
+        }),
     });
   }
-  render(camera: Camera, state: ViewState, visiblePanels: Set<number> | null = null) {
+  render(
+    camera: Camera,
+    state: ViewState,
+    visiblePanels: Set<number> | null = null,
+  ) {
     const rect = this.canvas.getBoundingClientRect(),
       ratio = Math.min(devicePixelRatio || 1, 1.5);
     this.width = rect.width;
@@ -281,8 +374,9 @@ export class GardenRenderer {
     this.visiblePanels = visiblePanels;
     if (visiblePanels) {
       c.clearRect(0, 0, this.width, this.height);
-      for (const p of panels) if (visiblePanels.has(p.puzzle.id)) this.drawPanel(p.puzzle.id, state);
-      this.commands.sort((a, b) => b.depth - a.depth).forEach((cmd) => cmd.paint());
+      for (const p of panels)
+        if (visiblePanels.has(p.puzzle.id)) this.drawPanel(p.puzzle.id, state);
+      paintBackToFront(this.commands);
       return;
     }
     const sky = c.createLinearGradient(0, 0, 0, this.height);
@@ -292,9 +386,7 @@ export class GardenRenderer {
     c.fillStyle = sky;
     c.fillRect(0, 0, this.width, this.height);
     const flush = () => {
-      this.commands
-        .sort((a, b) => b.depth - a.depth)
-        .forEach((cmd) => cmd.paint());
+      paintBackToFront(this.commands);
       this.commands = [];
     };
     this.disk(-45, 38, -130, 7, "#fff0bd");
@@ -419,6 +511,7 @@ export class GardenRenderer {
               "#91a97c",
               "#7e9c72",
             ][i],
+            false, // Foliage is an open, two-sided shell, not a solid box.
           );
         }
       }
@@ -449,12 +542,9 @@ export class GardenRenderer {
       "#fff0ba",
     ]);
     this.text([0, 0.69, -26.66], "THE LIGHT YOU LEAVE BEHIND", 0.09, "#36564d");
-    this.commands
-      .sort((a, b) => b.depth - a.depth)
-      .forEach((cmd) => cmd.paint());
+    paintBackToFront(this.commands);
   }
   private drawPanel(id: number, state: ViewState) {
-    const commandStart = this.commands.length;
     const p = panels[id],
       puzzle = p.puzzle,
       active = state.active === id;
@@ -480,7 +570,7 @@ export class GardenRenderer {
       ],
       "#223e39",
     );
-    const structure = this.commands.splice(commandStart);
+    if (this.camera.z <= p.z + 0.19) return;
     const world = (q: Point): Vec => [
       p.x - 0.78 + (q[0] * 1.56) / puzzle.size,
       2.43 - (q[1] * 1.56) / puzzle.size,
@@ -526,15 +616,5 @@ export class GardenRenderer {
       0.062,
       "#c1c9a7",
     );
-    // Composite coplanar markings after their tablet. Per-edge depth sorting
-    // can otherwise bury a lower line inside the face at a pitched viewpoint.
-    const markings = this.commands.splice(commandStart);
-    this.commands.push({
-      depth: this.project([p.x, 1.65, p.z]).depth,
-      paint: () => {
-        structure.sort((a, b) => b.depth - a.depth).forEach((c) => c.paint());
-        if (this.camera.z > p.z + 0.19) markings.forEach((c) => c.paint());
-      },
-    });
   }
 }
