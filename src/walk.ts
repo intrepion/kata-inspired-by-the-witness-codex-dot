@@ -1,5 +1,5 @@
 import "./walk.css";
-import { interactionKeyAction } from "./walk-input";
+import { interactionKeyAction, MouseLook } from "./walk-input";
 import {
   initialInteraction,
   transition,
@@ -59,6 +59,7 @@ let mouseTrace = false,
   firstVisit = true;
 let player: Camera = { x: 0, y: 1.65, z: 8, yaw: 0, pitch: 0 },
   camera = { ...player };
+const mouseLook = new MouseLook();
 const gate: number[] = panels.map((p) => (save.solved[p.puzzle.id] ? 1 : 0)),
   keys = new Set<string>();
 let target: number | null = null,
@@ -140,6 +141,7 @@ function stopTracing() {
   capturedPointer = null;
 }
 function releaseMouseCapture() {
+  mouseLook.reset();
   captureAttempt++;
   if (document.pointerLockElement === canvas) {
     dispatch({ type: "release-capture" });
@@ -318,14 +320,14 @@ canvas.addEventListener("pointerdown", (e) => {
   canvas.setPointerCapture(e.pointerId);
   capturedPointer = e.pointerId;
 });
+// Pointer Lock defines relative movement on mouse events. Keep tablet pointer
+// input separate so touch/pen events and compatibility events cannot also turn.
+canvas.addEventListener("mousemove", (e) => {
+  if (session.mode === "walk" && document.pointerLockElement === canvas)
+    Object.assign(player, mouseLook.turn(player, e));
+});
 canvas.addEventListener("pointermove", (e) => {
-  if (session.mode === "walk" && document.pointerLockElement === canvas) {
-    player.yaw += e.movementX * 0.0024;
-    player.pitch = Math.max(
-      -1.1,
-      Math.min(1.1, player.pitch - e.movementY * 0.0024),
-    );
-  } else if (
+  if (
     session.mode === "panel" &&
     session.active !== null &&
     mouseTrace
@@ -357,6 +359,7 @@ document.addEventListener("contextmenu", (e) => {
   if (session.mode === "panel") leavePanel();
 });
 document.addEventListener("pointerlockchange", () => {
+  mouseLook.reset();
   if (document.pointerLockElement === canvas) {
     dispatch({ type: "capture-acquired" });
     if (session.mode !== "walk") releaseMouseCapture();
