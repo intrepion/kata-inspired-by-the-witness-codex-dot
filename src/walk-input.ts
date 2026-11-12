@@ -83,3 +83,19 @@ export class MouseLook {
     };
   }
 }
+
+/** Mouse-look fallback when the browser cannot lock the pointer. */
+export class DragLook {
+  private previous: { x: number; y: number } | null = null;
+  begin(x: number, y: number) { this.previous = { x, y }; }
+  end() { this.previous = null; }
+  turn(view: LookDirection, x: number, y: number): LookDirection {
+    const previous = this.previous;
+    if (!previous || !Number.isFinite(x) || !Number.isFinite(y)) return view;
+    this.previous = { x, y };
+    return {
+      yaw: view.yaw + (x - previous.x) * 0.0024,
+      pitch: Math.max(-1.1, Math.min(1.1, view.pitch - (y - previous.y) * 0.0024)),
+    };
+  }
+}

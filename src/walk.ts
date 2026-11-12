@@ -1,5 +1,5 @@
 import "./walk.css";
-import { interactionKeyAction, MouseLook } from "./walk-input";
+import { interactionKeyAction, MouseLook, DragLook } from "./walk-input";
 import {
   initialInteraction,
   transition,
@@ -24,11 +24,11 @@ const root = document.querySelector<HTMLDivElement>("#app")!;
 root.innerHTML = `<main class="walk-app">
 <canvas id="garden" tabindex="0" aria-label="First-person view of the Stillwater garden"></canvas>
 <header class="walk-header"><a class="wordmark" href="/">STILLWATER<span>A garden of small discoveries</span></a><div class="chapter"><span id="place">01 / THE LANDING</span><div id="progress" aria-label="Channel progress"></div></div></header>
-<button id="capture-hint" class="capture-hint" hidden>Click for mouse look · WASD and arrows remain active</button>
+<button id="capture-hint" class="capture-hint" hidden>Enable mouse look / or drag to look while walking</button>
 <div id="crosshair" aria-hidden="true">+</div><p id="nearby"></p>
 <div id="trace-frame" hidden></div><section id="trace-ui" hidden aria-label="Tablet controls"><div><span class="kicker">FIELD TABLET</span><h2 id="panel-title"></h2></div><p id="trace-help">Click the round spring. Follow the paths. Click the end. Esc pauses.</p><div class="trace-actions"><button id="undo">Undo <kbd>⌫</kbd></button><button id="reset">Retry <kbd>R</kbd></button><button id="leave">Leave tablet <kbd>E</kbd></button></div></section>
 <div class="walk-bottom"><span id="mode">TAKE YOUR TIME</span><p id="status" role="status" aria-live="polite"></p><span id="saved">PROGRESS SAVES HERE</span></div>
-<section id="pause" class="pause"><div class="pause-card"><span class="kicker">AN ISLAND LEFT IN YOUR CARE</span><h1 id="pause-title">Look slowly.<br>Find a way.</h1><p id="pause-copy">Someone tended this island long before you.<br>Follow the channels. Bring its lantern back to life.</p><button class="enter" id="enter">Enter the garden <span>↗</span></button><div class="control-guide"><span><kbd>W A S D</kbd> Walk</span><span><kbd>MOUSE</kbd> Look</span><span><kbd>CLICK / E</kbd> Use a tablet</span><span><kbd>ESC</kbd> Pause</span></div><details><summary>More controls & saved progress</summary><p>Shift: faster walking. E: enter or leave a tablet. Right click also leaves a tablet. Escape pauses walking or tracing; Resume returns to the same view with your trace intact. While tracing, R retries and Backspace undoes. You can drag, click adjacent points, or press Enter then arrow keys and Enter to submit. Arrow keys also turn your walking view.</p><button id="keyboard">Walk with keyboard look</button><p id="storage-note">This walk saves separately. Your original illustrated journey is still available below.</p></details><a class="atlas-link" href="/?atlas">Visit the original illustrated garden →</a></div><div class="pause-side"><span>THE CHANNEL WALK</span><p>Three tablets.<br>One quiet discovery.</p><span>STILLWATER / A FIRST-PERSON STUDY</span></div></section>
+<section id="pause" class="pause"><div class="pause-card"><span class="kicker">AN ISLAND LEFT IN YOUR CARE</span><h1 id="pause-title">Look slowly.<br>Find a way.</h1><p id="pause-copy">Someone tended this island long before you.<br>Follow the channels. Bring its lantern back to life.</p><button class="enter" id="enter">Enter the garden <span>↗</span></button><div class="control-guide"><span><kbd>W A S D</kbd> Walk</span><span><kbd>MOUSE</kbd> Look</span><span><kbd>CLICK / E</kbd> Use a tablet</span><span><kbd>ESC</kbd> Pause</span></div><details><summary>More controls & saved progress</summary><p>Shift: faster walking. E: enter or leave a tablet. Right click also leaves a tablet. Escape pauses walking or tracing; Resume returns to the same view with your trace intact. While tracing, R retries and Backspace undoes. You can drag, click adjacent points, or press Enter then arrow keys and Enter to submit. Arrow keys also turn your walking view. If mouse capture is unavailable, hold the left mouse button and drag to look while walking. Enable mouse look switches back from keyboard-only mode.</p><button id="keyboard">Walk with keyboard look</button><p id="storage-note">This walk saves separately. Your original illustrated journey is still available below.</p></details><a class="atlas-link" href="/?atlas">Visit the original illustrated garden →</a></div><div class="pause-side"><span>THE CHANNEL WALK</span><p>Three tablets.<br>One quiet discovery.</p><span>STILLWATER / A FIRST-PERSON STUDY</span></div></section>
 </main>`;
 const el = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
@@ -60,6 +60,7 @@ let mouseTrace = false,
 let player: Camera = { x: 0, y: 1.65, z: 8, yaw: 0, pitch: 0 },
   camera = { ...player };
 const mouseLook = new MouseLook();
+const dragLook = new DragLook();
 const gate: number[] = panels.map((p) => (save.solved[p.puzzle.id] ? 1 : 0)),
   keys = new Set<string>();
 let target: number | null = null,
@@ -128,12 +129,13 @@ function showMode() {
         : "TAKE YOUR TIME";
   canvas.style.cursor = session.mode === "panel" ? "crosshair" : "default";
   el("capture-hint").hidden =
-    session.mode !== "walk" || keyboardLook || session.capture !== "free";
+    session.mode !== "walk" || session.capture !== "free";
 }
 function dispatch(event: InteractionEvent) {
   session = transition(session, event);
 }
 function stopTracing() {
+  dragLook.end();
   mouseTrace = false;
   dragging = false;
   if (capturedPointer !== null && canvas.hasPointerCapture(capturedPointer))
@@ -290,9 +292,15 @@ canvas.addEventListener("pointerdown", (e) => {
   if (e.button !== 0) return;
   const { x, y } = coordinates(e);
   if (session.mode === "walk") {
-    if (!keyboardLook && document.pointerLockElement !== canvas) {
-      requestMouseCapture();
-      return;
+    if (document.pointerLockElement !== canvas && e.pointerType === "mouse") {
+      // Keep mouse and keyboard independent, even when pointer lock is denied.
+      dragLook.begin(e.clientX, e.clientY);
+      canvas.setPointerCapture(e.pointerId);
+      capturedPointer = e.pointerId;
+      if (!keyboardLook) {
+        requestMouseCapture();
+        return;
+      }
     }
     const id = renderer.panelAt(
       document.pointerLockElement ? canvas.clientWidth / 2 : x,
@@ -325,6 +333,9 @@ canvas.addEventListener("pointerdown", (e) => {
 canvas.addEventListener("mousemove", (e) => {
   if (session.mode === "walk" && document.pointerLockElement === canvas)
     Object.assign(player, mouseLook.turn(player, e));
+  else if (session.mode === "walk" && (e.buttons & 1) !== 0)
+    Object.assign(player, dragLook.turn(player, e.clientX, e.clientY));
+  else dragLook.end();
 });
 canvas.addEventListener("pointermove", (e) => {
   if (
@@ -338,6 +349,7 @@ canvas.addEventListener("pointermove", (e) => {
   }
 });
 canvas.addEventListener("pointerup", (e) => {
+  dragLook.end();
   const shouldSubmit =
     session.mode === "panel" &&
     session.active !== null &&
@@ -359,6 +371,7 @@ document.addEventListener("contextmenu", (e) => {
   if (session.mode === "panel") leavePanel();
 });
 document.addEventListener("pointerlockchange", () => {
+  dragLook.end();
   mouseLook.reset();
   if (document.pointerLockElement === canvas) {
     dispatch({ type: "capture-acquired" });
@@ -457,10 +470,11 @@ window.addEventListener("keydown", (e) => {
   }
 });
 window.addEventListener("keyup", (e) => keys.delete(e.code));
-el("enter").onclick = () => void resume();
+el("enter").onclick = () => void resume(false);
 el("keyboard").onclick = () => void resume(true);
 el("leave").onclick = () => leavePanel();
 el("capture-hint").onclick = () => {
+  keyboardLook = false;
   canvas.focus();
   requestMouseCapture();
 };
