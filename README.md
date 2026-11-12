@@ -44,3 +44,15 @@ An experimental `?view=three` garden uses a Three.js scene behind the existing i
 ## Arcade metadata
 
 See [docs/arcade-metadata.md](docs/arcade-metadata.md) for the game-owned manifest and screenshot provenance.
+
+### Mouse look while walking
+
+WASD movement and mouse look can be used together. If the browser cannot capture
+(lock) the mouse, hold the left mouse button and drag in the garden to look while
+walking. The **Enable mouse look** button returns from keyboard-only look to normal
+mouse capture. Ordinary Resume also returns to mouse-look controls; the explicit
+keyboard-look button remains available.
+
+If a laptop touchpad stops producing motion specifically while typing, OS palm
+rejection may be involved. This game cannot recover motion events the OS suppresses;
+compare with an external mouse before changing touchpad settings.
